@@ -6,17 +6,17 @@ import "../src/YuyuCoin.sol"; // 確保這個路徑正確;
 
 contract YuYuCoinTest is Test {
     YuYuCoin token;
-    address owner = address(1);
-    address user1 = address(2);
-    address user2 = address(3);
-    address taxCollector = address(4);
+    address owner = vm.addr(1);
+    address user1 = vm.addr(2);
+    address user2 = vm.addr(3);
+    address taxCollector = vm.addr(4);
 
     function setUp() public {
         vm.prank(owner); // 設定 `owner` 作為部署者
-        token = new YuYuCoin(owner, 1000 * 10 ** 18, 5, taxCollector);
+        token = new YuYuCoin(owner, 1000, 5, taxCollector);
     }
 
-    function testInitialSupply() public {
+    function testInitialSupply() public view {
         assertEq(token.balanceOf(owner), 1000 * 10 ** 18);
     }
 
@@ -36,13 +36,14 @@ contract YuYuCoinTest is Test {
         vm.stopPrank();
 
         vm.startPrank(user1);
-        token.transferFrom(owner, user2, 100 * 10 ** 18);
+        token.transferFrom(owner, user2, 50 * 10 ** 18);
         vm.stopPrank();
 
         // 應該收 5% 手續費，實際轉帳 95
-        assertEq(token.balanceOf(user2), 95 * 10 ** 18);
-        assertEq(token.balanceOf(taxCollector), 5 * 10 ** 18);
-        assertEq(token.allowance(owner, user1), 0); // 授權應該被扣除
+        assertEq(token.balanceOf(user2), 47.5 * 10 ** 18);
+        assertEq(token.balanceOf(taxCollector), 2.5 * 10 ** 18);
+        console.log(token.allowance(owner, user1));
+        assertEq(token.allowance(owner, user1), 50 * 10 ** 18); // 授權應該被扣除
     }
 
     function testBlacklist() public {
@@ -50,7 +51,7 @@ contract YuYuCoinTest is Test {
         token.addToBlacklist(user1);
 
         vm.prank(owner);
-        vm.expectRevert("Sender is blacklisted");
+        vm.expectRevert("Recipient is blacklisted");
         token.transfer(user1, 100 * 10 ** 18);
     }
 

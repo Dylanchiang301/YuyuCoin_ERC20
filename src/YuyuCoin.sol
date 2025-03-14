@@ -69,19 +69,11 @@ contract YuYuCoin is ERC20, Ownable {
         uint256 taxAmount = (amount * taxRate) / 100;
         uint256 transferAmount = amount - taxAmount;
 
-        require(
-            allowance(sender, msg.sender) >= amount + taxAmount,
-            "Allowance too low. Approve (amount + tax)"
-        );
 
         _transfer(sender, taxCollector, taxAmount);
         _transfer(sender, recipient, transferAmount);
 
-        _approve(
-            sender,
-            msg.sender,
-            allowance(sender, msg.sender) - (amount + taxAmount)
-        );
+        _approve(sender, msg.sender, allowance(sender, msg.sender) - amount);
 
         return true;
     }
